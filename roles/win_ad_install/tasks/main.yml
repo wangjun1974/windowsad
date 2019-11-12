@@ -1,0 +1,24 @@
+---
+- name: 'Install AD Domain Service feature'
+  win_feature:
+    name: AD-Domain-Services
+    state: present
+    include_sub_features: yes
+    include_management_tools: yes
+
+- name: Create new Windows domain in a new forest with specific parameters
+  win_domain:
+    dns_domain_name: "{{ ad_domain_name }}"
+    safe_mode_password: "{{ ad_safe_mode_password }}"
+  register: domain_install
+
+- name: Reboot if installing AD-Domain-Service feature requires it
+  win_reboot:
+  when: domain_install.reboot_required
+
+- name: List Domain Controllers in domain
+  win_shell: "nltest /dclist:{{ ad_domain_name }}"
+  register: domain_list
+
+- debug:
+   var: domain_list
